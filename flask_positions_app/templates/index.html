@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Catégories</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{{ url_for('index') }}"
+                       class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                        Toutes les catégories
+                    </a>
+                    {% for category in categories %}
+                    <a href="{{ url_for('index', category=category) }}"
+                       class="list-group-item list-group-item-action {% if current_category == category %}active{% endif %}">
+                        {{ category }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Positions</h5>
+                <a href="{{ url_for('show_map') }}" class="btn btn-sm btn-primary">
+                    Voir sur la carte
+                </a>
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom</th>
+                                <th>Type</th>
+                                <th>Quartier</th>
+                                <th>Coordonnées</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for position in positions %}
+                            <tr>
+                                <td>{{ position.id }}</td>
+                                <td>{{ position.name }}</td>
+                                <td>{{ position.type }}</td>
+                                <td>{{ position.quartier or '-' }}</td>
+                                <td>{{ "%.6f, %.6f"|format(position.lat, position.lng) }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary edit-btn"
+                                            data-id="{{ position.id }}"
+                                            data-name="{{ position.name }}"
+                                            data-type="{{ position.type }}"
+                                            data-quartier="{{ position.quartier }}"
+                                            data-commune="{{ position.get('commune', '') }}">
+                                        Modifier
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-btn"
+                                            data-id="{{ position.id }}">
+                                        Supprimer
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">Aucune position trouvée</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {{ pagination.links }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de modification -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modifier la position</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="mb-3">
+                        <label for="editName" class="form-label">Nom</label>
+                        <input type="text" class="form-control" id="editName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editType" class="form-label">Type</label>
+                        <input type="text" class="form-control" id="editType" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editQuartier" class="form-label">Quartier</label>
+                        <input type="text" class="form-control" id="editQuartier">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCommune" class="form-label">Commune</label>
+                        <input type="text" class="form-control" id="editCommune">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="saveEdit">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer cette position ?</p>
+                <input type="hidden" id="deleteId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion de la modification
+    const editModal = new bootstrap.Modal('#editModal');
+    const deleteModal = new bootstrap.Modal('#deleteModal');
+
+    // Boutons d'édition
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('editId').value = this.dataset.id;
+            document.getElementById('editName').value = this.dataset.name;
+            document.getElementById('editType').value = this.dataset.type;
+            document.getElementById('editQuartier').value = this.dataset.quartier;
+            document.getElementById('editCommune').value = this.dataset.commune || '';
+            editModal.show();
+        });
+    });
+
+    // Boutons de suppression
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('deleteId').value = this.dataset.id;
+            deleteModal.show();
+        });
+    });
+
+    // Sauvegarde des modifications
+    document.getElementById('saveEdit').addEventListener('click', function() {
+        const id = document.getElementById('editId').value;
+        const data = {
+            name: document.getElementById('editName').value,
+            type: document.getElementById('editType').value,
+            quartier: document.getElementById('editQuartier').value,
+            commune: document.getElementById('editCommune').value
+        };
+
+        fetch(`/api/positions/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Erreur lors de la mise à jour');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erreur lors de la mise à jour');
+        });
+    });
+
+    // Confirmation de suppression
+    document.getElementById('confirmDelete').addEventListener('click', function() {
+        const id = document.getElementById('deleteId').value;
+
+        fetch(`/api/positions/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Erreur lors de la suppression');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erreur lors de la suppression');
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>Carte des positions</h5>
+    </div>
+    <div class="card-body">
+        <div id="map" style="height: 600px; width: 100%;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBAQu5po736OLiXPSQP4RB4ks4YSa5KKnU&callback=initMap" async defer></script>
+
+<script>
+function initMap() {
+    const positions = {{ positions|tojson }};
+    const center = { lat: 18.0799, lng: -15.9653 }; // Centre sur Nouakchott
+
+    const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 12,
+        center: center,
+    });
+
+    // Ajouter des marqueurs pour chaque position
+    positions.forEach(position => {
+        const marker = new google.maps.Marker({
+            position: { lat: position.lat, lng: position.lng },
+            map: map,
+            title: position.name
+        });
+
+        const infoWindow = new google.maps.InfoWindow({
+            content: `
+                <div style="min-width: 200px;">
+                    <h6>${position.name}</h6>
+                    <p><strong>Type:</strong> ${position.type}</p>
+                    <p><strong>Quartier:</strong> ${position.quartier || '-'}</p>
+                    <p><strong>Coordonnées:</strong> ${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}</p>
+                </div>
+            `
+        });
+
+        marker.addListener("click", () => {
+            infoWindow.open(map, marker);
+        });
+    });
+
+    // Ajuster la vue pour afficher tous les marqueurs si nécessaire
+    if (positions.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        positions.forEach(position => {
+            bounds.extend(new google.maps.LatLng(position.lat, position.lng));
+        });
+        map.fitBounds(bounds);
+    }
+}
+</script>
+{% endblock %}
