@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗺️ Carte des Lieux - Nouakchott</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBAQu5po736OLiXPSQP4RB4ks4YSa5KKnU&libraries=places"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        .main-container {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .map-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: 15px;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 20px;
+            height: 600px;
+            overflow-y: auto;
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .btn-danger {
+            border-radius: 25px;
+            padding: 8px 20px;
+        }
+        
+        .btn-success {
+            border-radius: 25px;
+            padding: 8px 20px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .places-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .place-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+        
+        .place-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .place-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .place-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .stats-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .stats-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stats-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        
+        .modal-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .close {
+            color: white;
+            opacity: 0.8;
+        }
+        
+        .close:hover {
+            color: white;
+            opacity: 1;
+        }
+        
+        /* Styles pour l'analyse par type */
+        .type-stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .type-stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .type-stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .type-stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .type-stat-icon {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .type-table {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .type-table th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+        }
+        
+        .type-table td {
+            vertical-align: middle;
+        }
+        
+        .type-percentage {
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-map-marked-alt me-2"></i>
+                <strong>Carte des Lieux - Nouakchott</strong>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Cliquez sur la carte pour ajouter un lieu
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container main-container">
+        <!-- Statistiques -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="total-places">0</div>
+                    <div class="stats-label">Total des lieux</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="total-types">0</div>
+                    <div class="stats-label">Types de lieux</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="total-quartiers">0</div>
+                    <div class="stats-label">Quartiers</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="last-update">-</div>
+                    <div class="stats-label">Dernière mise à jour</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analyse par Type -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="form-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="fas fa-chart-pie me-2"></i>Analyse par Type</h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="showTypeAnalysis()">
+                                <i class="fas fa-chart-bar me-1"></i>Voir l'analyse
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="exportTypeData()">
+                                <i class="fas fa-download me-1"></i>Exporter
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Statistiques par type -->
+                    <div class="row" id="type-stats-container">
+                        <!-- Les cartes de statistiques par type seront générées ici -->
+                    </div>
+                    
+                    <!-- Graphique des types -->
+                    <div class="row mt-4">
+                        <div class="col-md-8">
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="typeChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Nombre</th>
+                                            <th>%</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="type-table-body">
+                                        <!-- Les données du tableau seront générées ici -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Carte -->
+            <div class="col-lg-8">
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Formulaire d'ajout -->
+                <div class="form-card">
+                    <h5 class="mb-3">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Ajouter un lieu
+                    </h5>
+                    
+                    <form id="add-place-form">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nom du lieu</label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Type</label>
+                            <select class="form-select" id="type" required>
+                                <option value="">Choisir un type</option>
+                                <option value="Mosquée">Mosquée</option>
+                                <option value="Pharmacie">Pharmacie</option>
+                                <option value="Restaurant">Restaurant</option>
+                                <option value="École">École</option>
+                                <option value="University">Université</option>
+                                <option value="Hôpital">Hôpital</option>
+                                <option value="Banque">Banque</option>
+                                <option value="Boutique">Boutique</option>
+                                <option value="Autre">Autre</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="quartier" class="form-label">Quartier</label>
+                            <input type="text" class="form-control" id="quartier" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-6">
+                                <label for="lat" class="form-label">Latitude</label>
+                                <input type="number" step="any" class="form-control" id="lat" required>
+                            </div>
+                            <div class="col-6">
+                                <label for="lng" class="form-label">Longitude</label>
+                                <input type="number" step="any" class="form-control" id="lng" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-plus me-2"></i>
+                                Ajouter le lieu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Filtres et recherche -->
+                <div class="form-card">
+                    <h5 class="mb-3">
+                        <i class="fas fa-filter me-2"></i>
+                        Filtres et Recherche
+                    </h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Rechercher par nom :</label>
+                        <input type="text" class="form-control" id="search-input" placeholder="Tapez un nom...">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Filtrer par type :</label>
+                        <select class="form-select" id="type-filter">
+                            <option value="">Tous les types</option>
+                            <option value="Mosquée">🕌 Mosquées</option>
+                            <option value="Pharmacie">💊 Pharmacies</option>
+                            <option value="Restaurant">🍽️ Restaurants</option>
+                            <option value="École">🏫 Écoles</option>
+                            <option value="Hôpital">🏥 Hôpitaux</option>
+                            <option value="Banque">🏦 Banques</option>
+                            <option value="Boutique">🛍️ Boutiques</option>
+                            <option value="Hotel">🏨 Hôtels</option>
+                            <option value="School">🏫 Écoles</option>
+                            <option value="University">🎓 Universités</option>
+                            <option value="university">🎓 Universités</option>
+                            <option value="Hospital">🏥 Hôpitaux</option>
+                            <option value="Pharmacy">💊 Pharmacies</option>
+                            <option value="Bank">🏦 Banques</option>
+                            <option value="Shopping Mall">🛍️ Centres commerciaux</option>
+                            <option value="Gas Station">⛽ Stations-service</option>
+                            <option value="Place Of Worship">🕌 Lieux de culte</option>
+                        </select>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <button class="btn btn-primary w-100" onclick="applyFilters()">
+                                <i class="fas fa-filter me-2"></i>
+                                Appliquer
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-secondary w-100" onclick="clearFilters()">
+                                <i class="fas fa-times me-2"></i>
+                                Effacer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Liste des lieux -->
+                <div class="form-card">
+                    <h5 class="mb-3">
+                        <i class="fas fa-list me-2"></i>
+                        Liste des lieux
+                    </h5>
+                    
+                    <div class="places-list" id="places-list">
+                        <!-- Les lieux seront ajoutés ici dynamiquement -->
+                    </div>
+                </div>
+                
+                <!-- Actions de sauvegarde -->
+                <div class="form-card">
+                    <h5 class="mb-3">
+                        <i class="fas fa-cogs me-2"></i>
+                        Actions
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <button class="btn btn-success w-100 mb-2" onclick="saveData()">
+                                <i class="fas fa-save me-2"></i>
+                                Sauvegarder
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-info w-100 mb-2" onclick="createBackup()">
+                                <i class="fas fa-download me-2"></i>
+                                Sauvegarde
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <button class="btn btn-warning w-100 mb-2" onclick="exportData()">
+                                <i class="fas fa-file-export me-2"></i>
+                                Exporter
+                            </button>
+                        </div>
+                                        <div class="col-6">
+                    <button class="btn btn-secondary w-100 mb-2" onclick="refreshData()">
+                        <i class="fas fa-sync me-2"></i>
+                        Actualiser
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <button class="btn btn-info w-100 mb-2" onclick="fitMapToMarkers()">
+                        <i class="fas fa-crosshairs me-2"></i>
+                        Centrer la carte
+                    </button>
+                </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour modifier un lieu -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>
+                        Modifier le lieu
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-place-form">
+                        <input type="hidden" id="edit-id">
+                        <div class="mb-3">
+                            <label for="edit-name" class="form-label">Nom du lieu</label>
+                            <input type="text" class="form-control" id="edit-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-type" class="form-label">Type</label>
+                            <select class="form-select" id="edit-type" required>
+                                <option value="Mosquée">Mosquée</option>
+                                <option value="Pharmacie">Pharmacie</option>
+                                <option value="Restaurant">Restaurant</option>
+                                <option value="École">École</option>
+                                <option value="Hôpital">Hôpital</option>
+                                <option value="Banque">Banque</option>
+                                <option value="Boutique">Boutique</option>
+                                <option value="Autre">Autre</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-quartier" class="form-label">Quartier</label>
+                            <input type="text" class="form-control" id="edit-quartier" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <label for="edit-lat" class="form-label">Latitude</label>
+                                <input type="number" step="any" class="form-control" id="edit-lat" required>
+                            </div>
+                            <div class="col-6">
+                                <label for="edit-lng" class="form-label">Longitude</label>
+                                <input type="number" step="any" class="form-control" id="edit-lng" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="save-edit-btn">
+                        <i class="fas fa-save me-2"></i>
+                        Sauvegarder
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Application JS -->
+    <script>
+        // Variables globales
+        let map;
+        let markers = [];
+        let places = [];
+        let filteredPlaces = [];
+        let editingPlaceId = null;
+        let currentFilters = {
+            search: '',
+            type: ''
+        };
+        let typeChart = null;
+
+        // Initialisation de la carte Google Maps
+        function initMap() {
+            // Coordonnées de Nouakchott
+            const nouakchott = { lat: 18.0799, lng: -15.9653 };
+            
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: nouakchott,
+                zoom: 12,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    }
+                ]
+            });
+            
+            // Gestionnaire de clic sur la carte
+            map.addListener('click', function(e) {
+                document.getElementById('lat').value = e.latLng.lat().toFixed(6);
+                document.getElementById('lng').value = e.latLng.lng().toFixed(6);
+            });
+        }
+
+        // Charger les lieux depuis l'API
+        async function loadPlaces() {
+            try {
+                const response = await fetch('/api/places');
+                places = await response.json();
+                filteredPlaces = [...places];
+                updateMap();
+                updatePlacesList();
+                updateStats();
+            } catch (error) {
+                console.error('Erreur lors du chargement des lieux:', error);
+                showAlert('Erreur lors du chargement des lieux', 'danger');
+            }
+        }
+
+        // Mettre à jour la carte
+        function updateMap() {
+            // Supprimer tous les marqueurs existants
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            
+            // Ajouter les nouveaux marqueurs (utiliser filteredPlaces)
+            filteredPlaces.forEach(place => {
+                const marker = new google.maps.Marker({
+                    position: { lat: place.lat, lng: place.lng },
+                    map: map,
+                    title: place.name,
+                    icon: {
+                        url: getMarkerIcon(place.type),
+                        scaledSize: new google.maps.Size(32, 32)
+                    },
+                    animation: google.maps.Animation.DROP // Animation d'apparition
+                });
+                
+                // Créer le contenu de l'info window
+                const contentString = `
+                    <div style="min-width: 250px; padding: 15px;">
+                        <h6 style="margin-bottom: 10px; color: #333; font-weight: bold;">
+                            ${place.name}
+                        </h6>
+                        <p style="margin: 5px 0;"><strong>Type:</strong> ${getTypeIcon(place.type)} ${place.type}</p>
+                        <p style="margin: 5px 0;"><strong>Quartier:</strong> 📍 ${place.quartier}</p>
+                        <p style="margin: 5px 0; font-size: 0.9em; color: #666;">
+                            <strong>Coordonnées:</strong> ${place.lat.toFixed(4)}, ${place.lng.toFixed(4)}
+                        </p>
+                        <div class="mt-3" style="display: flex; gap: 5px;">
+                            <button class="btn btn-sm btn-primary" onclick="editPlace(${place.id})" style="flex: 1;">
+                                <i class="fas fa-edit"></i> Modifier
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deletePlace(${place.id})" style="flex: 1;">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                const infoWindow = new google.maps.InfoWindow({
+                    content: contentString
+                });
+                
+                marker.addListener('click', function() {
+                    infoWindow.open(map, marker);
+                });
+                
+                markers.push(marker);
+            });
+            
+            // Arrêter l'animation après 2 secondes
+            setTimeout(() => {
+                markers.forEach(marker => {
+                    marker.setAnimation(null);
+                });
+            }, 2000);
+        }
+        
+        // Obtenir l'icône du marqueur selon le type
+        function getMarkerIcon(type) {
+            const iconMap = {
+                'Mosquée': 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                'Pharmacie': 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                'Restaurant': 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+                'École': 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                'Hôpital': 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                'Banque': 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                'Boutique': 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+                'Hotel': 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png',
+                'School': 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                'University': 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                'Hospital': 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                'Restaurant': 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+                'Pharmacy': 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                'Bank': 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                'Shopping Mall': 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+                'Gas Station': 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                'Place Of Worship': 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                'university': 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+            };
+            
+            return iconMap[type] || 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png';
+        }
+        
+        // Obtenir l'icône du type pour l'affichage
+        function getTypeIcon(type) {
+            const iconMap = {
+                'Mosquée': '🕌',
+                'Pharmacie': '💊',
+                'Restaurant': '🍽️',
+                'École': '🏫',
+                'University': '🎓',
+                'university': '🎓',
+                'Hôpital': '🏥',
+                'Banque': '🏦',
+                'Boutique': '🛍️',
+                'Hotel': '🏨',
+                'School': '🏫',
+                'Hospital': '🏥',
+                'Pharmacy': '💊',
+                'Bank': '🏦',
+                'Shopping Mall': '🛍️',
+                'Gas Station': '⛽',
+                'Place Of Worship': '🕌'
+            };
+            
+            return iconMap[type] || '📍';
+        }
+
+        // Mettre à jour la liste des lieux
+        function updatePlacesList() {
+            const container = document.getElementById('places-list');
+            container.innerHTML = '';
+            
+            if (filteredPlaces.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">Aucun lieu trouvé</p>';
+                return;
+            }
+            
+            filteredPlaces.forEach(place => {
+                const placeElement = document.createElement('div');
+                placeElement.className = 'place-item';
+                placeElement.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="place-name">${place.name}</div>
+                            <div class="place-details">
+                                ${getTypeIcon(place.type)} <strong>${place.type}</strong><br>
+                                📍 ${place.quartier}
+                            </div>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="editPlace(${place.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deletePlace(${place.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(placeElement);
+            });
+        }
+
+        // Mettre à jour les statistiques
+        function updateStats() {
+            document.getElementById('total-places').textContent = places.length;
+            
+            const types = new Set(places.map(p => p.type));
+            document.getElementById('total-types').textContent = types.size;
+            
+            const quartiers = new Set(places.map(p => p.quartier));
+            document.getElementById('total-quartiers').textContent = quartiers.size;
+            
+            if (places.length > 0) {
+                const lastUpdate = new Date().toLocaleString('fr-FR');
+                document.getElementById('last-update').textContent = lastUpdate;
+            }
+            
+            // Mettre à jour l'analyse par type
+            updateTypeAnalysis();
+        }
+        
+        // Appliquer les filtres
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+            const typeFilter = document.getElementById('type-filter').value;
+            
+            currentFilters.search = searchTerm;
+            currentFilters.type = typeFilter;
+            
+            // Filtrer les lieux
+            filteredPlaces = places.filter(place => {
+                const matchesSearch = !searchTerm || place.name.toLowerCase().includes(searchTerm);
+                const matchesType = !typeFilter || place.type === typeFilter;
+                
+                return matchesSearch && matchesType;
+            });
+            
+            // Mettre à jour immédiatement l'affichage
+            updateMap();
+            updatePlacesList();
+            
+            // Afficher le nombre de résultats
+            const resultCount = filteredPlaces.length;
+            const totalCount = places.length;
+            
+            if (searchTerm || typeFilter) {
+                showAlert(`🔍 ${resultCount} lieu(x) trouvé(s) sur ${totalCount} total`, 'info');
+            }
+        }
+        
+        // Effacer les filtres
+        function clearFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('type-filter').value = '';
+            
+            currentFilters.search = '';
+            currentFilters.type = '';
+            
+            filteredPlaces = [...places];
+            
+            // Mettre à jour immédiatement l'affichage
+            updateMap();
+            updatePlacesList();
+            
+            showAlert('✅ Filtres effacés - Tous les lieux affichés', 'success');
+        }
+
+        // Ajouter un lieu
+        async function addPlace(event) {
+            event.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value.trim(),
+                type: document.getElementById('type').value.trim(),
+                quartier: document.getElementById('quartier').value.trim(),
+                lat: parseFloat(document.getElementById('lat').value),
+                lng: parseFloat(document.getElementById('lng').value)
+            };
+            
+            // Validation côté client
+            if (!formData.name || !formData.type || !formData.quartier) {
+                showAlert('Tous les champs sont obligatoires', 'danger');
+                return;
+            }
+            
+            if (isNaN(formData.lat) || isNaN(formData.lng)) {
+                showAlert('Les coordonnées doivent être des nombres valides', 'danger');
+                return;
+            }
+            
+            try {
+                // Afficher un indicateur de chargement
+                const submitBtn = document.querySelector('#add-place-form button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ajout en cours...';
+                submitBtn.disabled = true;
+                
+                const response = await fetch('/api/places', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    const newPlace = await response.json();
+                    
+                    // Ajouter immédiatement à la liste locale
+                    places.push(newPlace);
+                    
+                    // Appliquer les filtres actuels au nouveau lieu
+                    if (currentFilters.search || currentFilters.type) {
+                        const matchesSearch = !currentFilters.search || newPlace.name.toLowerCase().includes(currentFilters.search);
+                        const matchesType = !currentFilters.type || newPlace.type === currentFilters.type;
+                        
+                        if (matchesSearch && matchesType) {
+                            filteredPlaces.push(newPlace);
+                        }
+                    } else {
+                        filteredPlaces.push(newPlace);
+                    }
+                    
+                    // Mettre à jour immédiatement l'affichage
+                    updateMap();
+                    updatePlacesList();
+                    updateStats();
+                    
+                    // Réinitialiser le formulaire
+                    document.getElementById('add-place-form').reset();
+                    
+                    // Centrer la carte sur le nouveau lieu
+                    map.setCenter({ lat: newPlace.lat, lng: newPlace.lng });
+                    map.setZoom(15);
+                    
+                    showAlert(`✅ Lieu "${newPlace.name}" ajouté avec succès!`, 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert(`❌ ${error.error}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'ajout:', error);
+                showAlert('❌ Erreur lors de l\'ajout du lieu', 'danger');
+            } finally {
+                // Restaurer le bouton
+                const submitBtn = document.querySelector('#add-place-form button[type="submit"]');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Modifier un lieu
+        function editPlace(placeId) {
+            const place = places.find(p => p.id === placeId);
+            if (!place) return;
+            
+            editingPlaceId = placeId;
+            
+            document.getElementById('edit-id').value = place.id;
+            document.getElementById('edit-name').value = place.name;
+            document.getElementById('edit-type').value = place.type;
+            document.getElementById('edit-quartier').value = place.quartier;
+            document.getElementById('edit-lat').value = place.lat;
+            document.getElementById('edit-lng').value = place.lng;
+            
+            const modal = new bootstrap.Modal(document.getElementById('editModal'));
+            modal.show();
+        }
+
+        // Sauvegarder les modifications
+        async function saveEdit() {
+            if (!editingPlaceId) return;
+            
+            const formData = {
+                name: document.getElementById('edit-name').value.trim(),
+                type: document.getElementById('edit-type').value.trim(),
+                quartier: document.getElementById('edit-quartier').value.trim(),
+                lat: parseFloat(document.getElementById('edit-lat').value),
+                lng: parseFloat(document.getElementById('edit-lng').value)
+            };
+            
+            // Debug: afficher les données avant envoi
+            console.log('📤 Données à envoyer:', formData);
+            
+            // Validation côté client
+            if (!formData.name || !formData.type || !formData.quartier) {
+                showAlert('Tous les champs sont obligatoires', 'danger');
+                return;
+            }
+            
+            if (isNaN(formData.lat) || isNaN(formData.lng)) {
+                showAlert('Les coordonnées doivent être des nombres valides', 'danger');
+                return;
+            }
+            
+            try {
+                // Afficher un indicateur de chargement
+                const saveBtn = document.getElementById('save-edit-btn');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sauvegarde...';
+                saveBtn.disabled = true;
+                
+                const response = await fetch(`/api/places/${editingPlaceId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    const updatedPlace = await response.json();
+                    
+                    // Mettre à jour immédiatement dans la liste locale
+                    const index = places.findIndex(p => p.id === editingPlaceId);
+                    if (index !== -1) {
+                        places[index] = updatedPlace;
+                        
+                        // Mettre à jour aussi dans filteredPlaces si présent
+                        const filteredIndex = filteredPlaces.findIndex(p => p.id === editingPlaceId);
+                        if (filteredIndex !== -1) {
+                            filteredPlaces[filteredIndex] = updatedPlace;
+                        }
+                        
+                        // Mettre à jour immédiatement l'affichage
+                        updateMap();
+                        updatePlacesList();
+                        updateStats();
+                    }
+                    
+                    // Fermer le modal
+                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    
+                    // Centrer la carte sur le lieu modifié
+                    map.setCenter({ lat: updatedPlace.lat, lng: updatedPlace.lng });
+                    map.setZoom(15);
+                    
+                    showAlert(`✅ Lieu "${updatedPlace.name}" modifié avec succès!`, 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert(`❌ ${error.error}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la modification:', error);
+                showAlert('❌ Erreur lors de la modification', 'danger');
+            } finally {
+                // Restaurer le bouton
+                const saveBtn = document.getElementById('save-edit-btn');
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+
+        // Supprimer un lieu
+        async function deletePlace(placeId) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer ce lieu?')) return;
+            
+            try {
+                // Trouver le lieu avant suppression pour l'affichage
+                const placeToDelete = places.find(p => p.id === placeId);
+                const placeName = placeToDelete ? placeToDelete.name : 'Ce lieu';
+                
+                const response = await fetch(`/api/places/${placeId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    // Supprimer immédiatement des listes locales
+                    places = places.filter(p => p.id !== placeId);
+                    filteredPlaces = filteredPlaces.filter(p => p.id !== placeId);
+                    
+                    // Mettre à jour immédiatement l'affichage
+                    updateMap();
+                    updatePlacesList();
+                    updateStats();
+                    
+                    showAlert(`✅ "${placeName}" supprimé avec succès!`, 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert(`❌ ${error.error}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la suppression:', error);
+                showAlert('❌ Erreur lors de la suppression', 'danger');
+            }
+        }
+
+        // Afficher une alerte
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.querySelector('.main-container').insertBefore(alertDiv, document.querySelector('.main-container').firstChild);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Sauvegarder les données
+        async function saveData() {
+            try {
+                const response = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert(`✅ ${result.message} (${result.count} lieux)`, 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert(`❌ ${error.error}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la sauvegarde:', error);
+                showAlert('❌ Erreur lors de la sauvegarde', 'danger');
+            }
+        }
+
+        // Créer une sauvegarde
+        async function createBackup() {
+            try {
+                const response = await fetch('/api/backup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert(`✅ ${result.message} - ${result.backup_file}`, 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert(`❌ ${error.error}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la sauvegarde:', error);
+                showAlert('❌ Erreur lors de la création de la sauvegarde', 'danger');
+            }
+        }
+
+        // Exporter les données
+        async function exportData() {
+            try {
+                const response = await fetch('/api/export');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Créer un fichier de téléchargement
+                    const blob = new Blob([JSON.stringify(data, null, 2)], {
+                        type: 'application/json'
+                    });
+                    
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `nouakchott_places_export_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    showAlert(`✅ Export réussi - ${data.export_info.total_places} lieux`, 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert(`❌ ${error.error}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'export:', error);
+                showAlert('❌ Erreur lors de l\'export', 'danger');
+            }
+        }
+
+        // Actualiser les données
+        async function refreshData() {
+            await loadPlaces();
+            showAlert('✅ Données actualisées', 'success');
+        }
+        
+        // Centrer la carte sur tous les marqueurs
+        function fitMapToMarkers() {
+            if (markers.length === 0) return;
+            
+            const bounds = new google.maps.LatLngBounds();
+            markers.forEach(marker => {
+                bounds.extend(marker.getPosition());
+            });
+            
+            map.fitBounds(bounds);
+            
+            // Ajuster le zoom si nécessaire
+            google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
+                if (map.getZoom() > 15) {
+                    map.setZoom(15);
+                }
+            });
+        }
+
+        // ===== FONCTIONS D'ANALYSE PAR TYPE =====
+        
+        // Mettre à jour l'analyse par type
+        function updateTypeAnalysis() {
+            if (places.length === 0) return;
+            
+            // Calculer les statistiques par type
+            const typeStats = {};
+            places.forEach(place => {
+                if (!typeStats[place.type]) {
+                    typeStats[place.type] = 0;
+                }
+                typeStats[place.type]++;
+            });
+            
+            // Trier par nombre décroissant
+            const sortedTypes = Object.entries(typeStats)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10); // Top 10
+            
+            // Mettre à jour les cartes de statistiques
+            updateTypeStatCards(sortedTypes);
+            
+            // Mettre à jour le graphique
+            updateTypeChart(sortedTypes);
+            
+            // Mettre à jour le tableau
+            updateTypeTable(sortedTypes);
+        }
+        
+        // Mettre à jour les cartes de statistiques par type
+        function updateTypeStatCards(typeStats) {
+            const container = document.getElementById('type-stats-container');
+            container.innerHTML = '';
+            
+            typeStats.forEach(([type, count]) => {
+                const percentage = ((count / places.length) * 100).toFixed(1);
+                const card = document.createElement('div');
+                card.className = 'col-md-3 col-sm-6';
+                card.innerHTML = `
+                    <div class="type-stat-card" onclick="filterByType('${type}')">
+                        <div class="type-stat-icon">${getTypeIcon(type)}</div>
+                        <div class="type-stat-number">${count}</div>
+                        <div class="type-stat-label">${type}</div>
+                        <div class="type-stat-label">${percentage}%</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // Mettre à jour le graphique des types
+        function updateTypeChart(typeStats) {
+            const ctx = document.getElementById('typeChart');
+            
+            // Détruire le graphique existant s'il y en a un
+            if (typeChart) {
+                typeChart.destroy();
+            }
+            
+            const labels = typeStats.map(([type]) => type);
+            const data = typeStats.map(([, count]) => count);
+            const colors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
+            ];
+            
+            typeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const percentage = ((value / places.length) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Mettre à jour le tableau des types
+        function updateTypeTable(typeStats) {
+            const tbody = document.getElementById('type-table-body');
+            tbody.innerHTML = '';
+            
+            typeStats.forEach(([type, count]) => {
+                const percentage = ((count / places.length) * 100).toFixed(1);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <span style="font-size: 1.2em; margin-right: 8px;">${getTypeIcon(type)}</span>
+                        ${type}
+                    </td>
+                    <td><strong>${count}</strong></td>
+                    <td class="type-percentage">${percentage}%</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Filtrer par type en cliquant sur une carte
+        function filterByType(type) {
+            document.getElementById('type-filter').value = type;
+            applyFilters();
+            
+            // Centrer la carte sur les lieux de ce type
+            const typePlaces = places.filter(p => p.type === type);
+            if (typePlaces.length > 0) {
+                const bounds = new google.maps.LatLngBounds();
+                typePlaces.forEach(place => {
+                    bounds.extend({ lat: place.lat, lng: place.lng });
+                });
+                map.fitBounds(bounds);
+            }
+            
+            showAlert(`🔍 Affichage des ${typePlaces.length} lieux de type "${type}"`, 'info');
+        }
+        
+        // Afficher l'analyse complète
+        function showTypeAnalysis() {
+            if (places.length === 0) {
+                showAlert('❌ Aucune donnée à analyser', 'warning');
+                return;
+            }
+            
+            // Faire défiler vers l'analyse
+            document.querySelector('.form-card').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+            
+            showAlert('📊 Analyse par type affichée', 'success');
+        }
+        
+        // Exporter les données par type
+        function exportTypeData() {
+            if (places.length === 0) {
+                showAlert('❌ Aucune donnée à exporter', 'warning');
+                return;
+            }
+            
+            // Calculer les statistiques par type
+            const typeStats = {};
+            places.forEach(place => {
+                if (!typeStats[place.type]) {
+                    typeStats[place.type] = {
+                        count: 0,
+                        places: []
+                    };
+                }
+                typeStats[place.type].count++;
+                typeStats[place.type].places.push(place);
+            });
+            
+            // Créer le fichier d'export
+            const exportData = {
+                summary: {
+                    total_places: places.length,
+                    total_types: Object.keys(typeStats).length,
+                    export_date: new Date().toISOString(),
+                    analysis: Object.entries(typeStats).map(([type, data]) => ({
+                        type: type,
+                        count: data.count,
+                        percentage: ((data.count / places.length) * 100).toFixed(1)
+                    }))
+                },
+                details: typeStats
+            };
+            
+            // Télécharger le fichier
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+                type: 'application/json'
+            });
+            
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nouakchott_type_analysis_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showAlert('✅ Données d\'analyse exportées avec succès', 'success');
+        }
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendre que Google Maps soit chargé
+            if (typeof google !== 'undefined' && google.maps) {
+                initMap();
+                loadPlaces();
+            } else {
+                // Attendre le chargement de Google Maps
+                window.addEventListener('load', function() {
+                    initMap();
+                    loadPlaces();
+                });
+            }
+            
+            // Event listeners
+            document.getElementById('add-place-form').addEventListener('submit', addPlace);
+            document.getElementById('save-edit-btn').addEventListener('click', saveEdit);
+            
+            // Recherche en temps réel
+            document.getElementById('search-input').addEventListener('input', function() {
+                if (this.value.length >= 2 || this.value.length === 0) {
+                    applyFilters();
+                }
+            });
+            
+            // Filtre par type en temps réel
+            document.getElementById('type-filter').addEventListener('change', applyFilters);
+        });
+    </script>
+</body>
+</html> 
